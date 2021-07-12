@@ -47,7 +47,7 @@ app.get("/", async (req, res) => {
 
 app.post("/upload", upload.single("video"), function (req, res, next) {
   dir = exec(
-    `MP4Box -splits 99000 "${resolve("uploads/" + req.file.originalname)}"`,
+    `MP4Box -splits 102000 "${resolve("uploads/" + req.file.originalname)}"`,
     {
       cwd: resolve("uploads"),
     },
