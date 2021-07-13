@@ -85,8 +85,6 @@ app.post("/upload", upload.single("video"), function (req, res, next) {
         console.log(err);
         // should have err.code here?
       }
-      console.log("finali");
-      console.log(stdout);
     }
   );
 
