@@ -7,6 +7,7 @@ const ecstatic = require("ecstatic");
 const exec = require("child_process").exec;
 const serveIndex = require("serve-index");
 const filesize = require("filesize");
+const fileUpload = require("express-fileupload");
 
 const { join, resolve } = require("path");
 
@@ -20,6 +21,7 @@ app.use(urlencoded({ extended: false }));
 
 // parse application/json
 app.use(json());
+app.use(fileUpload());
 app.use(express.static("uploads"));
 app.use(
   "/static",
@@ -48,6 +50,12 @@ var upload = multer({ storage: storage });
 
 app.get("/", async (req, res) => {
   const html = await edge.render("index", {
+    greeting: "Hello world",
+  });
+  res.send(html);
+});
+app.get("/upload2", async (req, res) => {
+  const html = await edge.render("upload2", {
     greeting: "Hello world",
   });
   res.send(html);
@@ -93,6 +101,41 @@ app.post("/upload", upload.single("video"), function (req, res, next) {
     // exit code is code
     res.redirect("/");
   });
+});
+
+app.post("/upload2", function (req, res, next) {
+  let video = req.files.video;
+
+  video.mv(resolve("uploads", video.name), function (err) {
+    if (err) {
+      return res.status(500).send(err);
+    }
+
+    dir = exec(
+      `MP4Box -splits 102000 "${resolve("uploads/" + video.name)}"`,
+      {
+        cwd: resolve("uploads"),
+      },
+      function (err, stdout, stderr) {
+        console.log(stdout);
+        if (err) {
+          console.log(err);
+          // should have err.code here?
+        }
+      }
+    );
+
+    dir.on("exit", function (code) {
+      unlinkSync(resolve("uploads/" + video.name));
+      // exit code is code
+      res.redirect("/");
+    });
+  });
+  /*
+
+
+  
+  */
 });
 
 module.exports = app;

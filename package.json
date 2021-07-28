@@ -12,6 +12,7 @@
     "ecstatic": "^4.1.4",
     "edge.js": "^5.2.2",
     "express": "^4.17.1",
+    "express-fileupload": "^1.2.1",
     "filesize": "^7.0.0",
     "multer": "^1.4.2",
     "serve-index": "^1.9.1"
