@@ -21,7 +21,6 @@ app.use(urlencoded({ extended: false }));
 
 // parse application/json
 app.use(json());
-app.use(fileUpload());
 app.use(express.static("uploads"));
 app.use(
   "/static",
@@ -82,6 +81,7 @@ app.get("/list", async (req, res) => {
 });
 
 app.post("/upload", upload.single("video"), function (req, res, next) {
+  console.log(req.file);
   dir = exec(
     `MP4Box -splits 102000 "${resolve("uploads/" + req.file.originalname)}"`,
     {
@@ -103,7 +103,7 @@ app.post("/upload", upload.single("video"), function (req, res, next) {
   });
 });
 
-app.post("/upload2", function (req, res, next) {
+app.post("/upload2",fileUpload(), function (req, res, next) {
   let video = req.files.video;
 
   video.mv(resolve("uploads", video.name), function (err) {
