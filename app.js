@@ -87,10 +87,10 @@ app.get('/list', async (req, res) => {
 app.post('/upload', upload.single('video'), function (req, res, next) {
   console.log(req.file);
   dir = exec(
-    `MP4Box -splits 102000 "${resolve('uploads/' + req.file.originalname)}"`,
-    {
-      cwd: resolve('uploads'),
-    },
+    `/home/wilver/Documentos/video-trim/split-video.sh "${resolve(
+      'uploads/' + req.file.originalname
+    )}" 102000000 "-c copy"
+    `,
     function (err, stdout, stderr) {
       console.log(stdout);
       if (err) {
