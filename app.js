@@ -89,7 +89,7 @@ app.post('/upload', upload.single('video'), function (req, res, next) {
   dir = exec(
     `${resolve()}/split-video.sh "${resolve(
       'uploads/' + req.file.originalname
-    )}" 102000000 "-c copy"
+    )}" 104000000 "-c copy"
     `,
     function (err, stdout, stderr) {
       console.log(stdout);
