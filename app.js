@@ -12,7 +12,7 @@ const fileUpload = require('express-fileupload');
 const { join, resolve } = require('path');
 
 if (!fs.existsSync(resolve('uploads'))) {
-  fs.mkdirSync(resolve('uploads'));
+	fs.mkdirSync(resolve('uploads'));
 }
 
 // CommonJS
@@ -27,119 +27,152 @@ app.use(urlencoded({ extended: false }));
 app.use(json());
 app.use(express.static('uploads'));
 app.use(
-  '/static',
-  ecstatic({
-    root: `${__dirname}/uploads`,
-    showdir: true,
-  })
+	'/static',
+	ecstatic({
+		root: `${__dirname}/uploads`,
+		showdir: true,
+	})
 );
 app.use(
-  '/ftp',
-  express.static('uploads'),
-  serveIndex('uploads', { icons: true, view: 'details' })
+	'/ftp',
+	express.static('uploads'),
+	serveIndex('uploads', { icons: true, view: 'details' })
 );
 
 edge.mount(join(__dirname, 'views'));
 
 var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads');
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
+	destination: function (req, file, cb) {
+		cb(null, 'uploads');
+	},
+	filename: function (req, file, cb) {
+		cb(null, file.originalname);
+	},
 });
 var upload = multer({ storage: storage });
 
 app.get('/', async (req, res) => {
-  const html = await edge.render('index', {
-    greeting: 'Hello world',
-  });
-  res.send(html);
+	const html = await edge.render('index', {
+		greeting: 'Hello world',
+	});
+	res.send(html);
 });
 app.get('/upload2', async (req, res) => {
-  const html = await edge.render('upload2', {
-    greeting: 'Hello world',
-  });
-  res.send(html);
+	const html = await edge.render('upload2', {
+		greeting: 'Hello world',
+	});
+	res.send(html);
 });
 app.get('/list', async (req, res) => {
-  const files = fs.readdirSync(resolve('uploads'));
-  const archivos = [];
-  files.forEach((element) => {
-    const ele = fs.statSync(resolve('uploads', element));
+	const files = fs.readdirSync(resolve('uploads'));
+	const archivos = [];
+	files.forEach((element) => {
+		const ele = fs.statSync(resolve('uploads', element));
 
-    archivos.push({
-      date: new Date(ele.birthtime)
-        .toISOString()
-        .replace(/T/, ' ') // replace T with a space
-        .replace(/\..+/, ''),
-      size: filesize(ele.size),
-      name: element,
-    });
-  });
-  const html = await edge.render('list', {
-    files: archivos,
-  });
-  res.send(html);
+		archivos.push({
+			date: new Date(ele.birthtime)
+				.toISOString()
+				.replace(/T/, ' ') // replace T with a space
+				.replace(/\..+/, ''),
+			size: filesize(ele.size),
+			name: element,
+		});
+	});
+	const html = await edge.render('list', {
+		files: archivos,
+	});
+	res.send(html);
 });
 
 app.post('/upload', upload.single('video'), function (req, res, next) {
-  console.log(req.file);
-  dir = exec(
-    `${resolve()}/split-video.sh "${resolve(
-      'uploads/' + req.file.originalname
-    )}" 103000000 "-c copy"
+	console.log(req.file);
+	dir = exec(
+		`${resolve()}/split-video.sh "${resolve(
+			'uploads/' + req.file.originalname
+		)}" 103000000 "-c copy"
     `,
-    function (err, stdout, stderr) {
-      console.log(stdout);
-      if (err) {
-        console.log(err);
-        // should have err.code here?
-      }
-    }
-  );
+		function (err, stdout, stderr) {
+			console.log(stdout);
+			if (err) {
+				console.log(err);
+				// should have err.code here?
+			}
+		}
+	);
 
-  dir.on('exit', function (code) {
-    unlinkSync(resolve('uploads/' + req.file.originalname));
-    // exit code is code
-    res.redirect('/');
-  });
+	dir.on('exit', function (code) {
+		unlinkSync(resolve('uploads/' + req.file.originalname));
+		// exit code is code
+		res.redirect('/');
+	});
 });
 
-app.post('/upload2', fileUpload(), function (req, res, next) {
-  let video = req.files.video;
+app.post('/upload2', upload.array('video'), async function (req, res, next) {
 
-  video.mv(resolve('uploads', video.name), function (err) {
-    if (err) {
-      return res.status(500).send(err);
-    }
+	const files = req.files;
 
-    dir = exec(
-      `MP4Box -splits 102000 "${resolve('uploads/' + video.name)}"`,
-      {
-        cwd: resolve('uploads'),
-      },
-      function (err, stdout, stderr) {
-        console.log(stdout);
-        if (err) {
-          console.log(err);
-          // should have err.code here?
-        }
-      }
-    );
+	for (let index = 0; index < files.length; index++) {
+		const element = files[index];
+		dir = exec(
+			`MP4Box -splits 102000 "${resolve('uploads/' + element.originalname)}"`,
+			{
+				cwd: resolve('uploads'),
+			},
+			function (err, stdout, stderr) {
 
-    dir.on('exit', function (code) {
-      unlinkSync(resolve('uploads/' + video.name));
-      // exit code is code
-      res.redirect('/');
-    });
-  });
-  /*
+				if (err) {
+					console.log(err);
+		
+				}
+			}
+		);
 
+		dir.on('exit', function (code) {
+			unlinkSync(resolve('uploads/' + element.originalname));
 
-  
-  */
+		});
+	}
+
+	res.redirect('/');
+	/*
+
+setTimeout(async() => {
+	for (const file of files) {
+		await generateVideo(file)
+	}
+
+	res.redirect('/');
+	
+}, 3000);
+*/
 });
+
+function generateVideo(video) {
+
+	return new Promise((resolve, reject) => {
+		dir = exec(
+			`MP4Box -splits 102000 "${resolve('uploads/' + video.originalname)}"`,
+			{
+				cwd: resolve('uploads'),
+			},
+			function (err, stdout, stderr) {
+
+				if (err) {
+					console.log(err);
+					// should have err.code here?
+					reject(err)
+				}
+			}
+		);
+
+		dir.on('exit', function (code) {
+			unlinkSync(resolve('uploads/' + video.originalname));
+			// exit code is code
+			resolve(code)
+
+		});
+	})
+
+}
 
 module.exports = app;

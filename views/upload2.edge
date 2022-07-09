@@ -9,7 +9,7 @@
 <body>
    <div align ="center">
       <form method="post"  enctype="multipart/form-data"  id="upload_form" >
-          <input type="file" name="file1" id="file1" >
+          <input type="file" name="file1" id="file1"  multiple>
           <br>
   <progress id="progressBar" value="0" max="100" style="width:300px;"></progress>
   <h3 id="status"></h3>
@@ -24,10 +24,14 @@
 }
    
        function uploadFile() {
-  var file = _("file1").files[0];
+  const files=  _("file1").files.length
   // alert(file.name+" | "+file.size+" | "+file.type);
   var formdata = new FormData();
-  formdata.append("video", file);
+
+  for (var x = 0; x < files; x++) {
+	formdata.append("video",  _("file1").files[x]);
+			}
+ 
   var ajax = new XMLHttpRequest();
   ajax.upload.addEventListener("progress", progressHandler, false);
   ajax.addEventListener("load", completeHandler, false);
